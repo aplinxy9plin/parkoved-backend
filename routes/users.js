@@ -16,6 +16,7 @@ router.post('/add', function(req, res, next) {
         age: req.body.age,
         money: 0,
         pays: [],
+        avatar: req.body.avatar
       }, (err, insertResult) => {
         if(err) throw err
         db.close()
@@ -32,7 +33,7 @@ router.get('/get', function(req, res, next) {
     MongoClient.connect(MONGO_URI, (err, db) => {
       if(err) throw err
       var dbo = db.db(DB_NAME)
-      dbo.collection("users").findOne({ id: ObjectID(req.query.user_id) }, (err, result) => {
+      dbo.collection("users").findOne({ _id: ObjectID(req.query.user_id) }, (err, result) => {
         if(err) throw err
         if(result){
           db.close()
