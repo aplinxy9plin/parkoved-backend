@@ -4,7 +4,7 @@ var router = express.Router();
 var { MongoClient, ObjectID } = require("mongodb")
 var { MONGO_URI, DB_NAME } = require("../config")
 
-router.get('/add', function(req, res, next) {
+router.post('/add', function(req, res, next) {
   if(req.body.name && req.body.device_id && req.body.age){
     MongoClient.connect(MONGO_URI, (err, db) => {
       if(err) throw err
@@ -19,7 +19,7 @@ router.get('/add', function(req, res, next) {
       }, (err, insertResult) => {
         if(err) throw err
         db.close()
-        res.json({ type: 'ok', id: inserResult["ops"][0]["_id"] })
+        res.json({ type: 'ok', id: insertResult["ops"][0]["_id"] })
       })
     })
   }else{
