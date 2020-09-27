@@ -69,6 +69,26 @@ router.get('/getItems/:id', (req, res, next) => {
   }
 })
 
+router.get('/getItem/:id', (req, res, next) => {
+  if(ObjectID.isValid(req.params.id)){
+    MongoClient.connect(MONGO_URI, (err, db) => {
+      if(err) throw err
+      var dbo = db.db(DB_NAME)
+      dbo.collection('items').findOne({ _id: ObjectID(req.params.id) }, (err, result) => {
+        if(result){
+          db.close()
+          res.json({ type: 'ok', result })
+        }else{
+          db.close()
+          res.json({ type: 'bad_params' })
+        }
+      })
+    })
+  }else{
+    res.json({ type: 'bad_params' })
+  }
+})
+
 router.get('/get/:id', (req, res, next) => {
   if(ObjectID.isValid(req.params.id)){
     MongoClient.connect(MONGO_URI, (err, db) => {

@@ -2,11 +2,13 @@ const { Router } = require('express');
 var express = require('express');
 var router = express.Router();
 var { MongoClient, ObjectID } = require("mongodb")
-var { MONGO_URI, DB_NAME } = require("../config");
+var { MONGO_URI, DB_NAME, TG_TOKEN, managerId } = require("../config");
 const { route } = require('./park');
+const { Telegraf } = require('telegraf')
+const bot = new Telegraf(TG_TOKEN)
 
 router.post('/up', function(req, res, next) {
-  if(req.body.name && req.body.device_id && req.body.age){
+  if(req.body.id){
     MongoClient.connect(MONGO_URI, (err, db) => {
       if(err) throw err
       var dbo = db.db(DB_NAME)
@@ -52,7 +54,7 @@ router.post('/pay', (req, res) => {
                         pays: item.pays
                     }
                 }, () => {
-                    dbo.collection("users").findOne({ _id: ObjectID(req.body.id)}, (err, user) => {
+                    dbo.collection("users").findOne({ _id: ObjectID(req.body.user_id)}, (err, user) => {
                         if(err) throw err;
                         user.money -= req.body.money
                         user.pays.push({
@@ -60,15 +62,17 @@ router.post('/pay', (req, res) => {
                             price: req.body.money,
                             name: item.name
                         })
-                        dbo.collection("users").updateOne({ _id: ObjectID(req.body.id) }, {
+                        dbo.collection("users").updateOne({ _id: ObjectID(req.body.user_id) }, {
                             $set: {
-                                money: users.money,
-                                pays: users.pays
+                                money: user.money,
+                                pays: user.pays
                             }
                         }, (err) => {
-                            dbo.collection("users").findOne({ _id: ObjectID(req.body.id)}, (err, newuser) => {
+                            dbo.collection("users").findOne({ _id: ObjectID(req.body.user_id)}, (err, newuser) => {
                                 db.close()
-                                res.json({ type: 'ok', result: newuser })
+                                var RandomNumber = Math.ceil(Math.random() * 9999);              
+                                bot.telegram.sendMessage(managerId, `Успешная оплата.\nКод: ${RandomNumber}`)
+                                res.json({ type: 'ok', result: newuser, code: RandomNumber })
                             })
                         })
                     })
@@ -79,5 +83,9 @@ router.post('/pay', (req, res) => {
         res.json({ type: 'bad_params' })
     }
 })
+
+// bot.command('/checklist', (ctx) => ctx.reply('test'))
+
+bot.launch()
 
 module.exports = router;
